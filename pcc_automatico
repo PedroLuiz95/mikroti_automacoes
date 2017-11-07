@@ -1,8 +1,8 @@
 :global balance do={
 	:global Acao value=$acao
 	if ($Acao = "remover") do={
-		/ip route remove [find where comment="AUTOMACAO PCC SCRITP" ]
-		/ip firewall mangle remove [find where comment="AUTOMACAO PCC SCRITP" ]
+		/ip route remove [find where comment="AUTOMACAO PCC SCRIPT" ]
+		/ip firewall mangle remove [find where comment="AUTOMACAO PCC SCRIPT" ]
 		:error "Todas as regras foram removidas com sucesso"
 	}
 	:global ct value=0
@@ -40,7 +40,7 @@
 	}
 	:global ContadorCalculoPorcentagem value=0
 	:global TotalMarcacoes value=0
-	/ip firewall mangle remove [find where comment="AUTOMACAO PCC SCRITP"]
+	/ip firewall mangle remove [find where comment="AUTOMACAO PCC SCRIPT"]
 	:foreach b in=$InterfaceArray do={
 		:global InterfaceAtualCalculoPorcentagem value=$b
 		:global CargaAtualCalculoPorcentagem value=[:pick $CargaArray begin=$ContadorCalculoPorcentagem]
@@ -54,7 +54,7 @@
 
 		for c from=1 to=$PorcentagemAtual do={
 		/ip firewall mangle add action=mark-routing chain=prerouting dst-address-type=!local new-routing-mark="to_link_$InterfaceAtualCalculoPorcentagem" passthrough=no \
-     per-connection-classifier="both-addresses:100/$TotalMarcacoes" comment="AUTOMACAO PCC SCRITP"
+     per-connection-classifier="both-addresses:100/$TotalMarcacoes" comment="AUTOMACAO PCC SCRIPT"
 		:set $TotalMarcacoes value=($TotalMarcacoes + 1)
 		}
 	}
@@ -64,13 +64,13 @@
 		:put "Os valores nao sao exatos, portanto, sera adicionado $Exedente% na Interface: $InterfaceMaior"
 		for d from=1 to=$Exedente do={
 		/ip firewall mangle add action=mark-routing chain=prerouting dst-address-type=!local new-routing-mark="to_link_$InterfaceMaior" passthrough=no \
-     per-connection-classifier="both-addresses:100/$TotalMarcacoes" comment="AUTOMACAO PCC SCRITP"
+     per-connection-classifier="both-addresses:100/$TotalMarcacoes" comment="AUTOMACAO PCC SCRIPT"
 		:set $TotalMarcacoes value=($TotalMarcacoes + 1)
 		}
 	}
-/ip route remove [find where comment="AUTOMACAO PCC SCRITP" ]
+/ip route remove [find where comment="AUTOMACAO PCC SCRIPT" ]
 foreach e in=$InterfaceArray do={
-	/ip route add check-gateway=ping distance=1 gateway=$e routing-mark="to_link_$e" comment="AUTOMACAO PCC SCRITP"
+	/ip route add check-gateway=ping distance=1 gateway=$e routing-mark="to_link_$e" comment="AUTOMACAO PCC SCRIPT"
 }
 
 }
