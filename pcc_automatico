@@ -1,0 +1,84 @@
+:global balance do={
+	:global Acao value=$acao
+	if ($Acao = "remover") do={
+		/ip route remove [find where comment="AUTOMACAO PCC SCRITP" ]
+		/ip firewall mangle remove [find where comment="AUTOMACAO PCC SCRITP" ]
+		:error "Todas as regras foram removidas com sucesso"
+	}
+	:global ct value=0
+	:global InterfaceArray [:toarray $interfaces]
+	:global CargaArray [:toarray $cargas]
+	:foreach i in=$InterfaceArray do={
+		:global InterfaceAtual value=$i
+		:global CargaAtual value=[:pick $CargaArray begin=$ct]
+		:set $ct value=[($ct + 1)]
+		:if ([:len [/interface find name=$InterfaceAtual]] = 0 ) do={
+			:put "Erro localizado"
+			:put "O script sera interrompido"
+			:put "Descricao:\n"
+			:error "001-A Interface $InterfaceAtual nao existe"
+		}
+		:if ([/interface get [find where name=$InterfaceAtual] disabled ] = true) do={
+			:put "Erro localizado"
+			:put "O script sera interrompido"
+			:put "Descricao:\n"
+			:error "002-A interface $InterfaceAtual esta desabilitada"
+		}
+		:if ([:len [:tonum $CargaAtual]] = 0 ) do={
+			:put "Erro localizado"
+			:put "O script sera interrompido"
+			:put "Descricao:\n"
+			:error "003-A carga $CargaAtual deve ser um numero inteiro, nao pode conter letras ou caracteres especiais ex: 20"
+		}
+	}
+	:global CargaTotal value=0
+	:global PorcentagemMaior value=0
+	:global CargaTotalMedia value=0
+	:global InterfaceMaior value=""
+	:foreach a in=$CargaArray do={
+		:set $CargaTotal value=[($CargaTotal + $a)]
+	}
+	:global ContadorCalculoPorcentagem value=0
+	:global TotalMarcacoes value=0
+	/ip firewall mangle remove [find where comment="AUTOMACAO PCC SCRITP"]
+	:foreach b in=$InterfaceArray do={
+		:global InterfaceAtualCalculoPorcentagem value=$b
+		:global CargaAtualCalculoPorcentagem value=[:pick $CargaArray begin=$ContadorCalculoPorcentagem]
+		:set $ContadorCalculoPorcentagem value=[($ContadorCalculoPorcentagem + 1)]
+		:global PorcentagemAtual value=(($CargaAtualCalculoPorcentagem*100)/$CargaTotal)
+		:set $CargaTotalMedia value=($CargaTotalMedia + $PorcentagemAtual)
+		if ($PorcentagemAtual >= $PorcentagemMaior) do={
+			:set $InterfaceMaior value=$InterfaceAtualCalculoPorcentagem
+			:global PorcentagemMaior value=$CargaAtualCalculoPorcentagem
+		}
+
+		for c from=1 to=$PorcentagemAtual do={
+		/ip firewall mangle add action=mark-routing chain=prerouting dst-address-type=!local new-routing-mark="to_link_$InterfaceAtualCalculoPorcentagem" passthrough=no \
+     per-connection-classifier="both-addresses:100/$TotalMarcacoes" comment="AUTOMACAO PCC SCRITP"
+		:set $TotalMarcacoes value=($TotalMarcacoes + 1)
+		}
+	}
+
+	if ($CargaTotalMedia != 100) do={
+		:global Exedente value=(100 - $CargaTotalMedia)
+		:put "Os valores nao sao exatos, portanto, sera adicionado $Exedente% na Interface: $InterfaceMaior"
+		for d from=1 to=$Exedente do={
+		/ip firewall mangle add action=mark-routing chain=prerouting dst-address-type=!local new-routing-mark="to_link_$InterfaceMaior" passthrough=no \
+     per-connection-classifier="both-addresses:100/$TotalMarcacoes" comment="AUTOMACAO PCC SCRITP"
+		:set $TotalMarcacoes value=($TotalMarcacoes + 1)
+		}
+	}
+/ip route remove [find where comment="AUTOMACAO PCC SCRITP" ]
+foreach e in=$InterfaceArray do={
+	/ip route add check-gateway=ping distance=1 gateway=$e routing-mark="to_link_$e" comment="AUTOMACAO PCC SCRITP"
+}
+
+}
+##################################################################
+#Edite esta linha abaixo para controlar a execucao do script
+#---------------------\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/--------------
+
+$balance interfaces="ether1,ether2,ether3" cargas="10,20,30" 
+
+#---------------------/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\--------------
+##################################################################
