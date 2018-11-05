@@ -1,5 +1,7 @@
+
 # mikroti_automacoes
 Para executar este script, basta copiar tudo o que esta acima, e colar direto no terminal
+1
 
 Deve ser seguida a ordem de acordo com a interface, ou seja, no exemplo abaixo, temos que o Link da
 
