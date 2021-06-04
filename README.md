@@ -13,11 +13,11 @@ Ether3 --> 30Mbps
 
 #Exemplos:
 
-#1-Criando o PCC com 3 Interfaces de chegada do Link, e com a capacidade de cada uma delas
+# 1-Criando o PCC com 3 Interfaces de chegada do Link, e com a capacidade de cada uma delas
 
 $balance interfaces="ether1,ether2,ether3" cargas="10,20,30"
 
-#Para adicionar mais interfaces, basta colocar uma virgula, e o nome correto da interface, e também acrescentar o numero correspondente ao trafego do Link que chega por essa interface.
+# Para adicionar mais interfaces, basta colocar uma virgula, e o nome correto da interface, e também acrescentar o numero correspondente ao trafego do Link que chega por essa interface.
 
 Exemplo:
 
